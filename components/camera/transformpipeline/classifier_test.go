@@ -27,8 +27,7 @@ func buildRobotWithClassifier(logger golog.Logger) (robot.Robot, error) {
 
 	// create fake source camera
 	tfliteSrv1 := config.Service{
-		Name: "object_classifier",
-
+		Name:  "object_classifier",
 		Type:  mlmodel.SubtypeName,
 		Model: resource.NewDefaultModel("tflite_cpu"),
 		Attributes: config.AttributeMap{
