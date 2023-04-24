@@ -81,18 +81,31 @@ func registerMLModelVisionService(
 	if err != nil {
 		return nil, err
 	}
+
 	classifierFunc, err := attemptToBuildClassifier(mlm)
 	if err != nil {
 		logger.Infof("%v", errors.Wrapf(err, "was not able to turn ml model %q into a classifier", params.ModelName))
 	} else {
-		logger.Infof("model %q fulfills a vision service ciassifier", params.ModelName)
+		classifierFunc, err = checkIfClassifierWorks(ctx, classifierFunc, mlm)
+		if err != nil {
+			logger.Infof("%v", errors.Wrapf(err, "was not able to turn ml model %q into a classifier", params.ModelName))
+		} else {
+			logger.Infof("model %q fulfills a vision service ciassifier", params.ModelName)
+		}
 	}
+
 	detectorFunc, err := attemptToBuildDetector(mlm)
 	if err != nil {
 		logger.Infof("%v", errors.Wrapf(err, "was not able to turn ml model %q into a detector", params.ModelName))
 	} else {
-		logger.Infof("model %q fulfills a vision service detector", params.ModelName)
+		detectorFunc, err = checkIfDetectorWorks(ctx, detectorFunc, mlm)
+		if err != nil {
+			logger.Infof("%v", errors.Wrapf(err, "was not able to turn ml model %q into a detector", params.ModelName))
+		} else {
+			logger.Infof("model %q fulfills a vision service detector", params.ModelName)
+		}
 	}
+
 	segmenter3DFunc, err := attemptToBuild3DSegmenter(mlm)
 	if err != nil {
 		logger.Infof("%v", errors.Wrapf(err, "was not able to turn ml model %q into a 3D segmenter", params.ModelName))
@@ -104,9 +117,13 @@ func registerMLModelVisionService(
 }
 
 // Unpack output based on expected type and force it into a []float64.
-func unpack(inMap map[string]interface{}, name string, md mlmodel.MLMetadata) []float64 {
+func unpack(inMap map[string]interface{}, name string, md mlmodel.MLMetadata) ([]float64, error) {
 	var out []float64
 	me := inMap[name]
+	if me == nil {
+		return nil, errors.New("Invalid input to unpack")
+	}
+
 	switch getTensorTypeFromName(name, md) {
 	case UInt8:
 		temp := me.([]uint8)
@@ -119,9 +136,9 @@ func unpack(inMap map[string]interface{}, name string, md mlmodel.MLMetadata) []
 			out = append(out, float64(p))
 		}
 	default:
-		return nil
+		return nil, nil
 	}
-	return out
+	return out, nil
 }
 
 // getTensorTypeFromName uses the metadata to find the expected type of the tensor.

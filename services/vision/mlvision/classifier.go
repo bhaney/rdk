@@ -11,6 +11,7 @@ import (
 	"go.viam.com/rdk/rimage"
 	"go.viam.com/rdk/services/mlmodel"
 	"go.viam.com/rdk/vision/classification"
+	"go.viam.com/utils/artifact"
 )
 
 func attemptToBuildClassifier(mlm mlmodel.Service) (classification.Classifier, error) {
@@ -45,9 +46,15 @@ func attemptToBuildClassifier(mlm mlmodel.Service) (classification.Classifier, e
 			return nil, err
 		}
 
-		probs := unpack(outMap, "probability", md)
+		probs, err := unpack(outMap, "probability", md)
+		if err != nil {
+			return nil, err
+		}
 		if len(probs) == 0 {
-			probs = unpack(outMap, "output0", md)
+			probs, err = unpack(outMap, "output0", md)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		confs := checkClassificationScores(probs)
@@ -61,4 +68,21 @@ func attemptToBuildClassifier(mlm mlmodel.Service) (classification.Classifier, e
 		}
 		return classifications, nil
 	}, nil
+}
+
+func checkIfClassifierWorks(ctx context.Context, classifierFunc classification.Classifier, mlm mlmodel.Service) (classification.Classifier, error) {
+	if classifierFunc == nil {
+		return nil, errors.New("Nil classifier function")
+	}
+
+	img, err := rimage.NewImageFromFile(artifact.MustPath("vision/tflite/dogscute.jpeg"))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = classifierFunc(ctx, img)
+	if err != nil {
+		return nil, errors.New("Cannot use model as a classifier")
+	}
+	return classifierFunc, nil
 }
