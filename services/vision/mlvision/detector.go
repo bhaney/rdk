@@ -7,12 +7,12 @@ import (
 
 	"github.com/nfnt/resize"
 	"github.com/pkg/errors"
+	"go.viam.com/utils/artifact"
 
 	"go.viam.com/rdk/rimage"
 	"go.viam.com/rdk/services/mlmodel"
 	"go.viam.com/rdk/utils"
 	"go.viam.com/rdk/vision/objectdetection"
-	"go.viam.com/utils/artifact"
 )
 
 func attemptToBuildDetector(mlm mlmodel.Service) (objectdetection.Detector, error) {
@@ -103,8 +103,8 @@ func attemptToBuildDetector(mlm mlmodel.Service) (objectdetection.Detector, erro
 	}, nil
 }
 
-func checkIfDetectorWorks(ctx context.Context, detectorFunc objectdetection.Detector, mlm mlmodel.Service) (objectdetection.Detector, error) {
-	if detectorFunc == nil {
+func checkIfDetectorWorks(ctx context.Context, df objectdetection.Detector) (objectdetection.Detector, error) {
+	if df == nil {
 		return nil, errors.New("Nil detector function")
 	}
 
@@ -113,9 +113,9 @@ func checkIfDetectorWorks(ctx context.Context, detectorFunc objectdetection.Dete
 		return nil, err
 	}
 
-	_, err = detectorFunc(ctx, img)
+	_, err = df(ctx, img)
 	if err != nil {
 		return nil, errors.New("Cannot use model as a detector")
 	}
-	return detectorFunc, nil
+	return df, nil
 }

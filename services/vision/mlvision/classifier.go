@@ -7,11 +7,11 @@ import (
 
 	"github.com/nfnt/resize"
 	"github.com/pkg/errors"
+	"go.viam.com/utils/artifact"
 
 	"go.viam.com/rdk/rimage"
 	"go.viam.com/rdk/services/mlmodel"
 	"go.viam.com/rdk/vision/classification"
-	"go.viam.com/utils/artifact"
 )
 
 func attemptToBuildClassifier(mlm mlmodel.Service) (classification.Classifier, error) {
@@ -70,8 +70,8 @@ func attemptToBuildClassifier(mlm mlmodel.Service) (classification.Classifier, e
 	}, nil
 }
 
-func checkIfClassifierWorks(ctx context.Context, classifierFunc classification.Classifier, mlm mlmodel.Service) (classification.Classifier, error) {
-	if classifierFunc == nil {
+func checkIfClassifierWorks(ctx context.Context, cf classification.Classifier) (classification.Classifier, error) {
+	if cf == nil {
 		return nil, errors.New("Nil classifier function")
 	}
 
@@ -80,9 +80,9 @@ func checkIfClassifierWorks(ctx context.Context, classifierFunc classification.C
 		return nil, err
 	}
 
-	_, err = classifierFunc(ctx, img)
+	_, err = cf(ctx, img)
 	if err != nil {
 		return nil, errors.New("Cannot use model as a classifier")
 	}
-	return classifierFunc, nil
+	return cf, nil
 }

@@ -86,7 +86,7 @@ func registerMLModelVisionService(
 	if err != nil {
 		logger.Infof("%v", errors.Wrapf(err, "was not able to turn ml model %q into a classifier", params.ModelName))
 	} else {
-		classifierFunc, err = checkIfClassifierWorks(ctx, classifierFunc, mlm)
+		classifierFunc, err = checkIfClassifierWorks(ctx, classifierFunc)
 		if err != nil {
 			logger.Infof("%v", errors.Wrapf(err, "was not able to turn ml model %q into a classifier", params.ModelName))
 		} else {
@@ -98,7 +98,7 @@ func registerMLModelVisionService(
 	if err != nil {
 		logger.Infof("%v", errors.Wrapf(err, "was not able to turn ml model %q into a detector", params.ModelName))
 	} else {
-		detectorFunc, err = checkIfDetectorWorks(ctx, detectorFunc, mlm)
+		detectorFunc, err = checkIfDetectorWorks(ctx, detectorFunc)
 		if err != nil {
 			logger.Infof("%v", errors.Wrapf(err, "was not able to turn ml model %q into a detector", params.ModelName))
 		} else {
