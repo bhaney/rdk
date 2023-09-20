@@ -21,6 +21,7 @@ import (
 // segmenterConfig is the attribute struct for segementers (their name as found in the vision service).
 type segmenterConfig struct {
 	SegmenterName string `json:"segmenter_name"`
+	Colorize      bool   `json:"colorize"`
 }
 
 // segmenterSource takes a pointcloud from the camera and applies a segmenter to it.
@@ -28,6 +29,7 @@ type segmenterSource struct {
 	stream        gostream.VideoStream
 	cameraName    string
 	segmenterName string
+	colorize      bool
 	r             robot.Robot
 }
 
@@ -52,6 +54,7 @@ func newSegmentationsTransform(
 		gostream.NewEmbeddedVideoStream(source),
 		sourceString,
 		conf.SegmenterName,
+		conf.Colorize,
 		r,
 	}
 	src, err := camera.NewVideoSourceFromReader(ctx, segmenter, nil, props.ImageType)
@@ -92,6 +95,13 @@ func (ss *segmenterSource) NextPointCloud(ctx context.Context) (pointcloud.Point
 	}
 
 	// merge pointclouds
+	if ss.colorize {
+		cloudSlice := make([]pointcloud.PointCloud, 0, len(clouds))
+		for _, cloud := range clouds {
+			cloudSlice = append(cloudSlice, cloud.PointCloud)
+		}
+		return pointcloud.MergePointCloudsWithColor(cloudSlice)
+	}
 	cloudsWithOffset := make([]pointcloud.CloudAndOffsetFunc, 0, len(clouds))
 	for _, cloud := range clouds {
 		cloudCopy := cloud
